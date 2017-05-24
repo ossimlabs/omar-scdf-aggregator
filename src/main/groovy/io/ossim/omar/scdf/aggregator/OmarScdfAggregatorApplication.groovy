@@ -18,8 +18,38 @@ class OmarScdfAggregatorApplication {
 
 	@StreamListener(Processor.INPUT) @SendTo(Processor.OUTPUT)
 	String transform(ReceivedAwsData receivedAwsData){
-		println receivedAwsData
+
+
+		//println receivedAwsData
+
+		// TODO: When the filename comes through we need to check the s3
+		//		 bucket to see if it is in the bucket.
+		//		 File types:
+		//		 1. foo.txt
+		//		 1. foo.zip
+
+
+
+
+
+		if(receivedAwsData.filename == 'foo.zip') {
+			println 'Yep, it is foo.zip'
+		}
+		else {
+			println 'Nope, it is NOT foo.tif'
+		}
+
+
+
+
+
+
+
+
+
 		return receivedAwsData.filename + " " + receivedAwsData.bucket
+
+
 	}
 
 }
