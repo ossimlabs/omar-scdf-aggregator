@@ -34,31 +34,40 @@ class OmarScdfAggregatorApplication {
 			Resource[] allZipFilesInFolder = this.resourcePatternResolver.getResources("s3://omar-dropbox/*.zip")
 			String outputMessage
 
-			allZipFilesInFolder.each {
+//			allZipFilesInFolder.each {
+//
+//				println "Incoming SQS filename: ${receivedAwsData.filename}"
+//				println 'Checking against Bucket filename: ' + it.filename
+//
+//				def f = it.filename
+//				println f
+//
+//				if(f == receivedAwsData.filename) {
+//
+//					println "##################"
+//					println "Bingo!!! ${f} is here in the bucket!!!! "
+//					println "##################"
+//
+//					outputMessage = receivedAwsData.filename + " " + receivedAwsData.bucket
+//				}
+//				else {
+//
+//					outputMessage = "File not found yet!"
+//
+//				}
+//
+//			}
 
-				println "Incoming SQS filename: ${receivedAwsData.filename}"
-				println 'Checking against Bucket filename: ' + it.filename
+			allZipFilesInFolder.find { element ->
 
-				def f = it.filename
-				println f
-
-				if(f == receivedAwsData.filename) {
-
-					println "##################"
-					println "Bingo!!! ${f} is here in the bucket!!!! "
-					println "##################"
-
-					outputMessage = receivedAwsData.filename + " " + receivedAwsData.bucket
-				}
-				else {
-
-					outputMessage = "File not found yet!"
-
-				}
+				println element.filename
+				outputMessage = element.filename
+				return (element.filename == receivedAwsData.filename)
 
 			}
 
-			return outputMessage
+			println "Found ${outputMessage}"
+			return outputMessage + " " + receivedAwsData.bucket
 
 		}
 		catch(Exception ex){
