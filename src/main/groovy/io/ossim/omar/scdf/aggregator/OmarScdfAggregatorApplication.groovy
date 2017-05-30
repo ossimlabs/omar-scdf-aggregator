@@ -25,9 +25,6 @@ class OmarScdfAggregatorApplication {
 		SpringApplication.run OmarScdfAggregatorApplication, args
 	}
 
-	@Value('${testThingy}')
-	String testThingy
-
 	@Value('${fileExtension1}')
 	String fileExtension1
 
@@ -53,9 +50,6 @@ class OmarScdfAggregatorApplication {
 		def fileExtension = payload.filename[payload.filename.lastIndexOf('.')..payload.filename.length() - 1]
 		def fileToLookFor = ""
 
-		println "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-		println "@@@@@@@@@@@@@@@@@@@@@@@ ${fileExtension2} @@@@@@@@@@@@@@@@@@@@@@@@@@@"
-		println "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
 		// TODO: Filter file extensions via config
 
