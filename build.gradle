@@ -12,28 +12,19 @@ buildscript {
 		maven { url "https://repo.grails.org/grails/core" }
 	}
 	dependencies {
-		classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-		classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.8.2"
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
 	}
 }
-//buildscript {
-//	ext {
-//		springBootVersion = '1.5.3.RELEASE'
-//	}
-//	repositories {
-//		mavenCentral()
-//	}
-//	dependencies {
-//		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-//	}
-//}
 
 apply plugin: 'groovy'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
+apply plugin: "idea"
+apply plugin: "java"
+apply plugin: "maven-publish"
+apply plugin: "maven"
 
-version = '0.0.1-SNAPSHOT'
+
 sourceCompatibility = 1.8
 
 repositories {
@@ -49,11 +40,19 @@ dependencies {
 	compile('org.springframework.cloud:spring-cloud-starter-aws')
 	compile('org.springframework.cloud:spring-cloud-stream-binder-kafka')
 	compile('org.codehaus.groovy:groovy')
+	compile('org.codehaus.groovy:groovy-json')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 
 dependencyManagement {
 	imports {
 		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
 	}
 }
