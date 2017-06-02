@@ -75,13 +75,14 @@ class OmarScdfAggregatorApplication {
 		if(logger.isDebugEnabled()){
 			logger.debug("Message received: ${message}")
 		}
+
 		def filesToDownload
 		def payload = new JsonSlurper().parseText(message.payload)
 		def bucketName = payload.bucket
 
 		def fileNameFromMessage = payload.filename[0..payload.filename.lastIndexOf('.') - 1]
 		def fileExtensionFromMessage = payload.filename[payload.filename.lastIndexOf('.')..payload.filename.length() - 1]
-		def fileToLookFor = ""
+		def fileToLookFor
 
 		if(logger.isDebugEnabled()){
 			logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
