@@ -1,4 +1,4 @@
-package io.ossim.omar.scdf.sqs
+package io.ossim.omar.scdf.aggregator
 
 /**
  * Created by cdowin on 6/5/17.
