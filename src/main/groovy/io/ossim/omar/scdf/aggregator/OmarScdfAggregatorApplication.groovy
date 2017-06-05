@@ -127,14 +127,4 @@ class OmarScdfAggregatorApplication {
 		}
 		return filesToDownload
 	}
-
-    /**
-     * BucketFile is a container class to hold the S3 bucket and image file name data
-     * @String filename output file name
-     * @String bucket output bucket
-     */
-	private final class BucketFile {
-		String filename
-		String bucket
-	}
 }
