@@ -29,6 +29,7 @@ class OmarScdfAggregatorApplication {
 	 * The application logger
 	 */
 	private Logger logger = LoggerFactory.getLogger(this.getClass())
+
 	/**
 	 * File extension passed in from application.properties
 	 */
@@ -127,10 +128,11 @@ class OmarScdfAggregatorApplication {
 		return filesToDownload
 	}
 
-	/**
-	 * @String filename output file name
-	 * @String bucket output bucket
-	 */
+    /**
+     * BucketFile is a container class to hold the S3 bucket and image file name data
+     * @String filename output file name
+     * @String bucket output bucket
+     */
 	private final class BucketFile {
 		String filename
 		String bucket
