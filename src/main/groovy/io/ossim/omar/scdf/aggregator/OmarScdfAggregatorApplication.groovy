@@ -80,55 +80,58 @@ class OmarScdfAggregatorApplication {
 
         JsonBuilder filesToDownload
 
-        // Parse the message
-		def parsedJson = new JsonSlurper().parseText(message.payload)
-		def bucketName = parsedJson.file.bucket[0]
-		def fileFromJson = parsedJson.file.filename[0]
-		def fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
-		def fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
+        if(null != message.payload) {
 
-		if(logger.isDebugEnabled()){
-			logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
-		}
+            // Parse the message
+            def parsedJson = new JsonSlurper().parseText(message.payload)
+            def bucketName = parsedJson.file.bucket
+            def fileFromJson = parsedJson.file.filename
+            def fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
+            def fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
 
-		// TODO:
-		// This assumes we will always be looking for two files with the aggregator.  Should
-		// we make it so that we can also look for one, or maybe three???
-		if (fileExtension1 == fileExtensionFromMessage) {
-
-            if(logger.isDebugEnabled()){
-                logger.debug("fileExtension1 matches file extension from message")
+            if (logger.isDebugEnabled()) {
+                logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
             }
 
-			// Looks for the associated file.  Example: .txt
-            def fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
+            // TODO:
+            // This assumes we will always be looking for two files with the aggregator.  Should
+            // we make it so that we can also look for one, or maybe three???
+            if (fileExtension1 == fileExtensionFromMessage) {
 
-			def s3Uri = "s3://${bucketName}/${fileToLookFor}"
+                if (logger.isDebugEnabled()) {
+                    logger.debug("fileExtension1 matches file extension from message")
+                }
 
-			Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
+                // Looks for the associated file.  Example: .txt
+                def fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
 
-			if(s3FileResource.exists()){
-                // The other file exists! Put both files in a JSON array to send to next processor
+                def s3Uri = "s3://${bucketName}/${fileToLookFor}"
 
-                // TODO make this dynamic for N files to download
-                def file1 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension1}")
-                def file2 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension2}")
-                def fileList = [file1, file2]
+                Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
 
-                filesToDownload = new JsonBuilder()
-                filesToDownload(files: fileList)
+                if (s3FileResource.exists()) {
+                    // The other file exists! Put both files in a JSON array to send to next processor
 
-			} else {
-				logger.warn("""
+                    // TODO make this dynamic for N files to download
+                    def file1 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension1}")
+                    def file2 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension2}")
+                    def fileList = [file1, file2]
+
+                    filesToDownload = new JsonBuilder()
+                    filesToDownload(files: fileList)
+
+                } else {
+                    logger.warn("""
 					Received notification for file that does not exist:
 					${s3FileResource.filename}
 					""")
-			}
-		}
+                }
+            }
 
-		if(logger.isDebugEnabled()){
-			logger.debug("filesToDownload: ${filesToDownload}")
-		}
+            if (logger.isDebugEnabled()) {
+                logger.debug("filesToDownload: ${filesToDownload}")
+            }
+        }
 		return filesToDownload.toString()
 	}
 
