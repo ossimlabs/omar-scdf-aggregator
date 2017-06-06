@@ -84,7 +84,7 @@ class OmarScdfAggregatorApplication {
 		def parsedJson = new JsonSlurper().parseText(message.payload)
 		def bucketName = parsedJson.file.bucket
 		def fileNameFromMessage = parsedJson.file.filename[0..parsedJson.file.filename.lastIndexOf('.') - 1]
-		def fileExtensionFromMessage = parsedJson.file.filename[parsedJson.file.filename.lastIndexOf('.')..parsedJson.filename.length() - 1]
+		def fileExtensionFromMessage = parsedJson.file.filename[parsedJson.file.filename.lastIndexOf('.')..parsedJson.file.filename.length() - 1]
 
 		if(logger.isDebugEnabled()){
 			logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
