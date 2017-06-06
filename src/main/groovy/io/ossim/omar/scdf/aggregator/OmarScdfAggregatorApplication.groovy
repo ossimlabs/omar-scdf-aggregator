@@ -83,11 +83,11 @@ class OmarScdfAggregatorApplication {
         if(null != message.payload) {
 
             // Parse the message
-            def parsedJson = new JsonSlurper().parseText(message.payload)
-            def bucketName = parsedJson.file.bucket
-            def fileFromJson = parsedJson.file.filename
-            def fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
-            def fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
+            final def parsedJson = new JsonSlurper().parseText(message.payload)
+            final String bucketName = parsedJson.file.bucket
+            final String fileFromJson = parsedJson.file.filename
+            final String fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
+            final String fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
 
             if (logger.isDebugEnabled()) {
                 logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
@@ -103,19 +103,19 @@ class OmarScdfAggregatorApplication {
                 }
 
                 // Looks for the associated file.  Example: .txt
-                def fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
+                final String fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
 
-                def s3Uri = "s3://${bucketName}/${fileToLookFor}"
+                final String s3Uri = "s3://${bucketName}/${fileToLookFor}"
 
-                Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
+                final Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
 
                 if (s3FileResource.exists()) {
                     // The other file exists! Put both files in a JSON array to send to next processor
 
                     // TODO make this dynamic for N files to download
-                    def file1 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension1}")
-                    def file2 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension2}")
-                    def fileList = [file1, file2]
+                    final def file1 = new BucketFile(bucketName, "${fileNameFromMessage}${fileExtension1}")
+                    final def file2 = new BucketFile(bucketName, "${fileNameFromMessage}${fileExtension2}")
+                    final def fileList = [file1, file2]
 
                     filesToDownload = new JsonBuilder()
                     filesToDownload(files: fileList)
@@ -136,7 +136,12 @@ class OmarScdfAggregatorApplication {
 	}
 
     private class BucketFile{
-        def bucket
-        def filename
+        String bucket
+        String filename
+
+        BucketFile(String aBucket, String aFilename){
+            this.bucket = aBucket
+            this.filename = aFilename
+        }
     }
 }
