@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.Resource
 import groovy.json.JsonSlurper
+import groovy.json.JsonBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -77,13 +78,14 @@ class OmarScdfAggregatorApplication {
 			logger.debug("Message received: ${message}")
 		}
 
-		def filesToDownload
-		def payload = new JsonSlurper().parseText(message.payload)
-		def bucketName = payload.bucket
+        JsonBuilder filesToDownload
 
-		def fileNameFromMessage = payload.filename[0..payload.filename.lastIndexOf('.') - 1]
-		def fileExtensionFromMessage = payload.filename[payload.filename.lastIndexOf('.')..payload.filename.length() - 1]
-		def fileToLookFor
+        // Parse the message
+		def parsedJson = new JsonSlurper().parseText(message.payload)
+		def bucketName = parsedJson.file.bucket
+		def fileNameFromMessage = parsedJson.file.filename[0..parsedJson.filename.lastIndexOf('.') - 1]
+		def fileExtensionFromMessage = parsedJson.file.filename[parsedJson.filename.lastIndexOf('.')..parsedJson.filename.length() - 1]
+
 
 		if(logger.isDebugEnabled()){
 			logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
@@ -95,29 +97,32 @@ class OmarScdfAggregatorApplication {
 		if (fileExtension1 == fileExtensionFromMessage) {
 
 			// Looks for the associated file.  Example: .txt
-			fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
+            def fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
 
-			def s3 = "s3://${bucketName}/${fileToLookFor}"
+			def s3Uri = "s3://${bucketName}/${fileToLookFor}"
 
-			Resource fileFoundInS3 = this.resourcePatternResolver.getResource(s3)
+			Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
 
-			if(fileFoundInS3.exists()){
+			if(s3FileResource.exists()){
+                // The other file exists! Put both files in a JSON array to send to next processor
 
-				// The other file exists! Put both files in a JSON array to send to next processor
-				def file = new BucketFile()
-				file.filename = "${fileNameFromMessage}${fileExtension1}"
-				file.bucket = bucketName
+                filesToDownload = new JsonBuilder()
 
-				def file2 = new BucketFile()
-				file2.filename = "${fileNameFromMessage}${fileExtension2}"
-				file2.bucket = bucketName
-
-				filesToDownload = JsonOutput.toJson([file, file2])
-
+                // TODO: make this build an array of N files to download
+                filesToDownload.files{
+                    [{
+                        bucket: bucketName
+                        filename: "${fileNameFromMessage}${fileExtension1}"
+                    },
+                    {
+                        bucket: bucketName
+                        filename: "${fileNameFromMessage}${fileExtension2}"
+                    }]
+                }
 			} else {
 				logger.warn("""
 					Received notification for file that does not exist:
-					${fileFoundInS3.filename}
+					${s3FileResource.filename}
 					""")
 			}
 		}
@@ -125,6 +130,6 @@ class OmarScdfAggregatorApplication {
 		if(logger.isDebugEnabled()){
 			logger.debug("filesToDownload: ${filesToDownload}")
 		}
-		return filesToDownload
+		return filesToDownload.toString()
 	}
 }
