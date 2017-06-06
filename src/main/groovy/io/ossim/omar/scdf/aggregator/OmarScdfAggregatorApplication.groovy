@@ -82,9 +82,9 @@ class OmarScdfAggregatorApplication {
 
         // Parse the message
 		def parsedJson = new JsonSlurper().parseText(message.payload)
-		def bucketName = parsedJson.file.bucket
-		def fileFromJson = parsedJson.file.filename
-        logger.debug("Parsed info:\nbucketName:${bucketName}\nfileFromJson:${fileFromJson}")
+		def bucketName = parsedJson.file.bucket[0]
+		def fileFromJson = parsedJson.file.filename[0]
+        logger.debug("cd1Parsed info:\nbucketName:${bucketName}\nfileFromJson:${fileFromJson}")
 		def fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
 		def fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
 
