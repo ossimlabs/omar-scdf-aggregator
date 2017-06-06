@@ -109,14 +109,14 @@ class OmarScdfAggregatorApplication {
                 filesToDownload = new JsonBuilder()
 
                 // TODO: make this build an array of N files to download
-                def root = filesToDownload{
+                filesToDownload.files{
                     [{
-                        bucket: bucketName
-                        filename: "${fileNameFromMessage}${fileExtension1}"
+                        bucket bucketName
+                        filename "${fileNameFromMessage}${fileExtension1}"
                     },
                     {
-                        bucket: bucketName
-                        filename: "${fileNameFromMessage}${fileExtension2}"
+                        bucket bucketName
+                        filename "${fileNameFromMessage}${fileExtension2}"
                     }]
                 }
 			} else {
