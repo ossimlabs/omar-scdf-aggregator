@@ -46,6 +46,12 @@ node(""){
                 """
             }
        }
+       stage ("Clean")
+       {
+            sh """
+            rm -rf ${workspaceDir}/${appName}/
+            """
+       }
     }
     catch(e){
         echo e.toString()
