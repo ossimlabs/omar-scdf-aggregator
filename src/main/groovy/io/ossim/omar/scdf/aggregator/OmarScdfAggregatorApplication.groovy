@@ -84,7 +84,6 @@ class OmarScdfAggregatorApplication {
 		def parsedJson = new JsonSlurper().parseText(message.payload)
 		def bucketName = parsedJson.file.bucket[0]
 		def fileFromJson = parsedJson.file.filename[0]
-        logger.debug("cd1Parsed info:\nbucketName:${bucketName}\nfileFromJson:${fileFromJson}")
 		def fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
 		def fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
 
@@ -97,6 +96,10 @@ class OmarScdfAggregatorApplication {
 		// we make it so that we can also look for one, or maybe three???
 		if (fileExtension1 == fileExtensionFromMessage) {
 
+            if(logger.isDebugEnabled()){
+                logger.debug("fileExtension1 matches file extension from message")
+            }
+
 			// Looks for the associated file.  Example: .txt
             def fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
 
@@ -107,19 +110,14 @@ class OmarScdfAggregatorApplication {
 			if(s3FileResource.exists()){
                 // The other file exists! Put both files in a JSON array to send to next processor
 
-                filesToDownload = new JsonBuilder()
+                // TODO make this dynamic for N files to download
+                def file1 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension1}")
+                def file2 = new BucketFile(bucket: bucketName, filename: "${fileNameFromMessage}${fileExtension2}")
+                def fileList = [file1, file2]
 
-                // TODO: make this build an array of N files to download
-                filesToDownload.files{
-                    [{
-                        bucket bucketName
-                        filename "${fileNameFromMessage}${fileExtension1}"
-                    },
-                    {
-                        bucket bucketName
-                        filename "${fileNameFromMessage}${fileExtension2}"
-                    }]
-                }
+                filesToDownload = new JsonBuilder()
+                filesToDownload(files: fileList)
+
 			} else {
 				logger.warn("""
 					Received notification for file that does not exist:
@@ -133,4 +131,9 @@ class OmarScdfAggregatorApplication {
 		}
 		return filesToDownload.toString()
 	}
+
+    private class BucketFile{
+        def bucket
+        def filename
+    }
 }
