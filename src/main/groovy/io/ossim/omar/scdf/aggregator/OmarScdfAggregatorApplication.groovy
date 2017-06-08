@@ -24,12 +24,12 @@ import org.slf4j.LoggerFactory
 
 @SpringBootApplication
 @EnableBinding(Processor.class)
-class OmarScdfAggregatorApplication {
+final class OmarScdfAggregatorApplication {
 
 	/**
 	 * The application logger
 	 */
-	private Logger logger = LoggerFactory.getLogger(this.getClass())
+	private final Logger logger = LoggerFactory.getLogger(this.getClass())
 
 	/**
 	 * File extension passed in from application.properties
@@ -55,11 +55,21 @@ class OmarScdfAggregatorApplication {
 	@Autowired
 	private ResourcePatternResolver resourcePatternResolver
 
+    OmarScdfAggregatorApplication() {
+        if(null == fileExtension1){
+            fileExtension1 = ".zip"
+        }
+
+        if(null == fileExtension2){
+            fileExtension2 = ".txt"
+        }
+    }
+
 	/**
 	 * The main entry point of the SCDF Aggregator application.
 	 * @param args
 	 */
-	static void main(String[] args) {
+	static final void main(String[] args) {
 		SpringApplication.run OmarScdfAggregatorApplication, args
 	}
 
@@ -72,7 +82,7 @@ class OmarScdfAggregatorApplication {
 	 * @return a JSON message of the files, and bucket that need to be downloaded
 	 */
 	@StreamListener(Processor.INPUT) @SendTo(Processor.OUTPUT)
-	String transform(Message<?> message){
+	final String aggregate(final Message<?> message){
 
 		if(logger.isDebugEnabled()){
 			logger.debug("Message received: ${message}")
@@ -135,6 +145,9 @@ class OmarScdfAggregatorApplication {
 		return filesToDownload.toString()
 	}
 
+    /**
+     * Private container class for files in S3
+     */
     private class BucketFile{
         String bucket
         String filename
