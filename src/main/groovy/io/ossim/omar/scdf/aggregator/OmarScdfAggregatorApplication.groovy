@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 
 @SpringBootApplication
 @EnableBinding(Processor.class)
-final class OmarScdfAggregatorApplication {
+class OmarScdfAggregatorApplication {
 
 	/**
 	 * The application logger
