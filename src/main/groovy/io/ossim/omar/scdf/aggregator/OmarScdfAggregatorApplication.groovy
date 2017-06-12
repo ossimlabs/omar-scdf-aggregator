@@ -95,6 +95,8 @@ class OmarScdfAggregatorApplication {
             // Parse the message
             final def parsedJson = new JsonSlurper().parseText(message.payload)
             logger.debug("parsedJson : ${parsedJson}")
+            logger.debug("parsedJson.bucket : ${parsedJson.bucket}")
+            logger.debug("parsedJson.bucket : ${parsedJson.filename}")
             final String bucketName = parsedJson.file.bucket
             logger.debug("bucketName:  ${bucketName}")
             final String fileFromJson = parsedJson.file.filename
