@@ -55,11 +55,11 @@ class OmarScdfAggregatorApplication {
 	private ResourcePatternResolver resourcePatternResolver
 
     OmarScdfAggregatorApplication() {
-        if(null == fileExtension1){
+        if(null == fileExtension1 || fileExtension1.equals("")){
             fileExtension1 = ".zip"
         }
 
-        if(null == fileExtension2){
+        if(null == fileExtension2 || fileExtension2.equals("")){
             fileExtension2 = ".txt"
         }
     }
