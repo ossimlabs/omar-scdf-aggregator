@@ -14,32 +14,25 @@ import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.Resource
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import groovy.util.logging.Slf4j
 
 /**
  * Created by adrake on 5/31/2017
  */
-
 @SpringBootApplication
 @EnableBinding(Processor.class)
+@Slf4j
 class OmarScdfAggregatorApplication {
-
-	/**
-	 * The application logger
-	 */
-	private final Logger logger = LoggerFactory.getLogger(this.getClass())
-
 	/**
 	 * File extension passed in from application.properties
 	 */
-	@Value('${fileExtension1}')
+	@Value('${fileExtension1:.zip}')
 	String fileExtension1
 
 	/**
 	 * File extension passed in from application.properties
 	 */
-	@Value('${fileExtension2}')
+	@Value('${fileExtension2:.txt}')
 	String fileExtension2
 
 	/**
@@ -54,21 +47,12 @@ class OmarScdfAggregatorApplication {
 	@Autowired
 	private ResourcePatternResolver resourcePatternResolver
 
-    OmarScdfAggregatorApplication() {
-        if(null == fileExtension1 || fileExtension1.equals("")){
-            fileExtension1 = ".zip"
-        }
-
-        if(null == fileExtension2 || fileExtension2.equals("")){
-            fileExtension2 = ".txt"
-        }
-    }
-
 	/**
 	 * The main entry point of the SCDF Aggregator application.
 	 * @param args
 	 */
-	static final void main(String[] args) {
+	static final void main(String[] args)
+    {
 		SpringApplication.run OmarScdfAggregatorApplication, args
 	}
 
@@ -80,39 +64,34 @@ class OmarScdfAggregatorApplication {
 	 * @param message The message object the SQS Notifier (in JSON)
 	 * @return a JSON message of the files, and bucket that need to be downloaded
 	 */
-	@StreamListener(Processor.INPUT) @SendTo(Processor.OUTPUT)
-	final String aggregate(final Message<?> message){
-
-		if(logger.isDebugEnabled()){
-			logger.debug("Message received: ${message}")
-		}
+	@StreamListener(Processor.INPUT)
+    @SendTo(Processor.OUTPUT)
+	final String aggregate(final Message<?> message)
+    {
+        log.debug("Message received: ${message}")
 
         JsonBuilder filesToDownload
 
-        if(null != message.payload) {
-
+        if (null != message.payload)
+        {
             // Parse the message
             final def parsedJson = new JsonSlurper().parseText(message.payload)
-            logger.debug("parsedJson : ${parsedJson}")
             final String bucketName = parsedJson.bucket
-            logger.debug("bucketName:  ${bucketName}")
             final String fileFromJson = parsedJson.filename
-            logger.debug("fileFromJson: ${fileFromJson}")
             final String fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
             final String fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
-            }
+            log.debug("parsedJson : ${parsedJson}")
+            log.debug("bucketName:  ${bucketName}")
+            log.debug("fileFromJson: ${fileFromJson}")
+            log.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
 
             // TODO:
             // This assumes we will always be looking for two files with the aggregator.  Should
             // we make it so that we can also look for one, or maybe three???
-            if (fileExtension1 == fileExtensionFromMessage) {
-
-                if (logger.isDebugEnabled()) {
-                    logger.debug("fileExtension1 matches file extension from message")
-                }
+            if (fileExtension1 == fileExtensionFromMessage)
+            {
+                log.debug("fileExtension1 matches file extension from message")
 
                 // Looks for the associated file.  Example: .txt
                 final String fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
@@ -121,7 +100,8 @@ class OmarScdfAggregatorApplication {
 
                 final Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
 
-                if (s3FileResource.exists()) {
+                if (s3FileResource.exists())
+                {
                     // The other file exists! Put both files in a JSON array to send to next processor
 
                     // TODO make this dynamic for N files to download
@@ -132,19 +112,24 @@ class OmarScdfAggregatorApplication {
                     filesToDownload = new JsonBuilder()
                     filesToDownload(files: fileList)
 
-                } else {
-                    logger.warn("""
+                }
+                else
+                {
+                    log.warn("""
 					Received notification for file that does not exist:
 					${s3FileResource.filename}
 					""")
                 }
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("filesToDownload: ${filesToDownload}")
-            }
+            log.debug("filesToDownload: ${filesToDownload}")
+            return filesToDownload.toString()
         }
-		return filesToDownload.toString()
+        else
+        {
+            log.warn("Received null mesage!")
+            return null
+        }
 	}
 
     /**
