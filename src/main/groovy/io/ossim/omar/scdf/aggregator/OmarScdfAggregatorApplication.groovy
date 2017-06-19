@@ -1,23 +1,25 @@
 package io.ossim.omar.scdf.aggregator
 
+import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.ListObjectsRequest
+import com.amazonaws.services.s3.model.ObjectListing
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.stream.annotation.EnableBinding
 import org.springframework.cloud.stream.annotation.StreamListener
 import org.springframework.cloud.stream.messaging.Processor
-import org.springframework.core.io.support.ResourcePatternResolver
 import org.springframework.messaging.Message
 import org.springframework.messaging.handler.annotation.SendTo
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.io.ResourceLoader
-import org.springframework.core.io.Resource
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 
 /**
  * Created by adrake on 5/31/2017
+ * Updated by slallier on 6/20/2017
  */
 @SpringBootApplication
 @EnableBinding(Processor.class)
@@ -29,23 +31,17 @@ class OmarScdfAggregatorApplication {
 	@Value('${fileExtension1:.zip}')
 	String fileExtension1
 
-	/**
-	 * File extension passed in from application.properties
-	 */
-	@Value('${fileExtension2:.txt}')
-	String fileExtension2
+    /**
+     * File extension passed in from application.properties
+     */
+    @Value('${fileExtension2:.email}')
+    String fileExtension2
 
 	/**
-	 * ResouceLoader used to access the s3 bucket objects
+	 * S3 Client
 	 */
 	@Autowired
-	private ResourceLoader resourceLoader
-
-	/**
-	 * Provides a URI for the s3
-	 */
-	@Autowired
-	private ResourcePatternResolver resourcePatternResolver
+	private AmazonS3Client s3Client
 
 	/**
 	 * The main entry point of the SCDF Aggregator application.
@@ -70,8 +66,6 @@ class OmarScdfAggregatorApplication {
     {
         log.debug("Message received: ${message}")
 
-        JsonBuilder filesToDownload
-
         if (null != message.payload)
         {
             // Parse the message
@@ -80,50 +74,52 @@ class OmarScdfAggregatorApplication {
             final String fileFromJson = parsedJson.filename
             final String fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
             final String fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
+            final String directoryPath = fileFromJson[0..fileFromJson.lastIndexOf('/') - 1]
+
+            boolean emailFileExists = false
+            JsonBuilder filesToDownload
 
             log.debug("parsedJson : ${parsedJson}")
             log.debug("bucketName:  ${bucketName}")
             log.debug("fileFromJson: ${fileFromJson}")
             log.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
 
-            // TODO:
-            // This assumes we will always be looking for two files with the aggregator.  Should
-            // we make it so that we can also look for one, or maybe three???
             if (fileExtension1 == fileExtensionFromMessage)
             {
-                log.debug("fileExtension1 matches file extension from message")
+                log.debug("fileExtension1 matches file extension from message, building JSON with aggregated files")
 
-                // Looks for the associated file.  Example: .txt
-                final String fileToLookFor = "${fileNameFromMessage}${fileExtension2}"
+                final List<BucketFile> listOfBucketfiles = new ArrayList<>()
 
-                final String s3Uri = "s3://${bucketName}/${fileToLookFor}"
+                final ListObjectsRequest lor = new ListObjectsRequest()
+                        .withBucketName(bucketName)
+                        .withPrefix(directoryPath)
+                final ObjectListing objectListing = s3Client.listObjects(lor)
 
-                final Resource s3FileResource = this.resourcePatternResolver.getResource(s3Uri)
-
-                if (s3FileResource.exists())
+                for (S3ObjectSummary summary : objectListing.getObjectSummaries())
                 {
-                    // The other file exists! Put both files in a JSON array to send to next processor
-
-                    // TODO make this dynamic for N files to download
-                    final def file1 = new BucketFile(bucketName, "${fileNameFromMessage}${fileExtension1}")
-                    final def file2 = new BucketFile(bucketName, "${fileNameFromMessage}${fileExtension2}")
-                    final def fileList = [file1, file2]
-
-                    filesToDownload = new JsonBuilder()
-                    filesToDownload(files: fileList)
-
+                    final def file = new BucketFile(summary.bucketName, summary.key)
+                    listOfBucketfiles.add(file)
+                    if (summary.key.endsWith(fileExtension2))
+                    {
+                        emailFileExists = true
+                    }
                 }
-                else
-                {
-                    log.warn("""
-					Received notification for file that does not exist:
-					${s3FileResource.filename}
-					""")
-                }
+
+                filesToDownload = new JsonBuilder()
+                filesToDownload(files: listOfBucketfiles)
             }
 
-            log.debug("filesToDownload: ${filesToDownload}")
-            return filesToDownload.toString()
+            if (emailFileExists)
+            {
+                log.debug("filesToDownload: ${filesToDownload}")
+                return filesToDownload.toString()
+
+            }
+            else
+            {
+                log.warn("No associated email file found, returning null!")
+                return null
+            }
         }
         else
         {
@@ -135,13 +131,14 @@ class OmarScdfAggregatorApplication {
     /**
      * Private container class for files in S3
      */
-    private class BucketFile{
+    private class BucketFile
+    {
         String bucket
         String filename
 
-        BucketFile(String aBucket, String aFilename){
-            this.bucket = aBucket
-            this.filename = aFilename
+        BucketFile(String bucketName, String filename){
+            this.bucket = bucketName
+            this.filename = filename
         }
     }
 }
