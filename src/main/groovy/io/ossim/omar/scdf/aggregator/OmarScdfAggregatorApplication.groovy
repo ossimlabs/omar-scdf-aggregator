@@ -98,7 +98,12 @@ class OmarScdfAggregatorApplication {
                 for (S3ObjectSummary summary : objectListing.getObjectSummaries())
                 {
                     final def file = new BucketFile(summary.bucketName, summary.key)
-                    listOfBucketfiles.add(file)
+
+                    if (!summary.key.endsWith('/'))
+                    {
+                        listOfBucketfiles.add(file)
+                    }
+
                     if (summary.key.endsWith(fileExtension2))
                     {
                         emailFileExists = true
