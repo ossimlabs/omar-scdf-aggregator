@@ -72,6 +72,7 @@ class OmarScdfAggregatorApplication {
             final def parsedJson = new JsonSlurper().parseText(message.payload)
             final String bucketName = parsedJson.bucket
             final String fileFromJson = parsedJson.filename
+            final String zipFileUrl = parsedJson.zipFileUrl
             final String fileNameFromMessage = fileFromJson[0..fileFromJson.lastIndexOf('.') - 1]
             final String fileExtensionFromMessage = fileFromJson[fileFromJson.lastIndexOf('.')..fileFromJson.length() - 1]
             final String directoryPath = fileFromJson[0..fileFromJson.lastIndexOf('/') - 1]
@@ -82,7 +83,7 @@ class OmarScdfAggregatorApplication {
             log.debug("parsedJson : ${parsedJson}")
             log.debug("bucketName:  ${bucketName}")
             log.debug("fileFromJson: ${fileFromJson}")
-            log.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\n")
+            log.debug("\n-- Parsed Message --\nfileName: ${fileNameFromMessage} \nfileExtension: ${fileExtensionFromMessage}\nbucketName: ${bucketName}\nzipFileUrl: ${zipFileUrl}\n")
 
             if (fileExtension1 == fileExtensionFromMessage)
             {
@@ -111,7 +112,7 @@ class OmarScdfAggregatorApplication {
                 }
 
                 filesToDownload = new JsonBuilder()
-                filesToDownload(files: listOfBucketfiles)
+                filesToDownload(files: listOfBucketfiles, zipFileUrl: zipFileUrl)
             }
 
             if (emailFileExists)
