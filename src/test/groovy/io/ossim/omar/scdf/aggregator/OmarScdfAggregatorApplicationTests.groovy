@@ -1,4 +1,4 @@
-/*package io.ossim.omar.scdf.aggregator
+package io.ossim.omar.scdf.aggregator
 
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,4 +13,4 @@ class OmarScdfAggregatorApplicationTests {
 	void contextLoads() {
 	}
 
-}*/
+}
