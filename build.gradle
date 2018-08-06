@@ -26,6 +26,7 @@ buildscript {
 		maven { url "${ossimMavenProxy}" }
 		if( !System.env.WWW_CONNECTED || Boolean.parseBoolean( System.env.WWW_CONNECTED ) ) {
 			maven { url "https://repo.grails.org/grails/core" }
+			maven { url "https://plugins.gradle.org/m2/" }
 		}
 	}
 	dependencies {
@@ -34,7 +35,7 @@ buildscript {
 }
 
 plugins {
-  id "org.sonarqube" version "2.6.2"
+    id "org.sonarqube" version "2.6.2"
 }
 
 apply plugin: 'groovy'
@@ -52,6 +53,7 @@ repositories {
 	maven { url "${ossimMavenProxy}" }
 	if( !System.env.WWW_CONNECTED || Boolean.parseBoolean( System.env.WWW_CONNECTED ) ) {
 		mavenCentral()
+		maven { url "https://plugins.gradle.org/m2/" }
 	}
 }
 
@@ -63,7 +65,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter')
 	compile('org.springframework.cloud:spring-cloud-starter-aws')
     compile('org.springframework.cloud:spring-cloud-starter-config')
-	compile('org.springframework.cloud:spring-cloud-stream-binder-kafka')
+    compile('org.springframework.cloud:spring-cloud-stream-binder-rabbit')
 	compile('org.codehaus.groovy:groovy')
 	compile('org.codehaus.groovy:groovy-json')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
